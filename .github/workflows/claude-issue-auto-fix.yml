@@ -1,0 +1,31 @@
+name: Claude Issue Auto-Fix
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  autofix:
+    if: ${{ github.event.label.name == 'bug' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Claude Code (auto-fix)
+       # 現時点の最新リリースが 2.0.15, skills をサポートしている 2.0.20 以後のコミットハッシュ値を指定
+        uses: anthropics/claude-code-action@fc4013af386ecc44b387ef2931c8d5f7c268b44e
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Issueを解決してください。Issue: #${{ github.event.issue.number }}
+
+          claude_args: |
+            --max-turns 30
+            --permission-mode bypassPermissions
+            --model claude-sonnet-4-5-20250929

@@ -1,0 +1,32 @@
+name: Claude PR Auto-Fix
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  autofix:
+    if: github.event.label.name == 'bug'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Export GH_TOKEN for gh CLI
+        run: echo "GH_TOKEN=${{ github.token }}" >> $GITHUB_ENV
+
+      - name: Run Claude Code (auto-fix)
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Open状態のbug Issueを修正してPRを作成してください。
+          claude_args: |
+            --max-turns 30
+            --permission-mode bypassPermissions
+            --model claude-sonnet-4-5-20250929
